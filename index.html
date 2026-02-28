@@ -1,42 +1,330 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Web Page</title>
-    <!-- Link to the external CSS file -->
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<title>Circular Maze Game</title>
+<style>
+    body { background:#111; margin:0; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; }
+    canvas { background:#1a1a2e; display:block; }
+    #msg { color:#aaa; font-family:monospace; font-size:13px; margin-top:8px; }
+</style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to My Simple Web Page</h1>
-    </header>
+<canvas id="mazeCanvas" width="800" height="800"></canvas>
+<div id="msg">Arrow keys: ← → move around ring | ↑ move outward | ↓ move inward &nbsp;|&nbsp; Find the gap in the outer wall!</div>
 
-    <nav>
-        <ul>
-            <li><a href="#home">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#contact">Contact</a></li>
-        </ul>
-    </nav>
+<script>
+class CircularMaze {
 
-    <section id="home">
-        <h2>Home Section</h2>
-        <p>This is a simple homepage section with some text. You can add more content here.</p>
-    </section>
+    constructor(n, r, ctx, cx, cy) {
+        this.num_levels = n;
+        this.line_length = r;
+        this.ctx = ctx;
+        this.centerX = cx;
+        this.centerY = cy;
 
-    <section id="about">
-        <h2>About Section</h2>
-        <p>This section contains information about the purpose of the page.</p>
-    </section>
+        this.num_cells_at_level = this.cellCountByLevel();
+        this.total_cells = this.num_cells_at_level.reduce((a,b)=>a+b,0);
 
-    <section id="contact">
-        <h2>Contact Section</h2>
-        <p>Feel free to contact me at <a href="mailto:your.email@example.com">your.email@example.com</a>.</p>
-    </section>
+        this.playerIndex = 0; // start at center
+        this.exitCell = null;
+        this.won = false;
+    }
 
-    <footer>
-        <p>&copy; 2024 My Simple Web Page</p>
-    </footer>
+    cellCountByLevel() {
+        let cells = [1];
+        for (let level = 1; level < this.num_levels; level++) {
+            cells.push(
+                Math.pow(2, Math.floor(Math.log2(level + 1)) + 3)
+            );
+        }
+        return cells;
+    }
+
+    index1DFrom2D(level, cell) {
+        let idx = 0;
+        for (let i = 0; i < level; i++)
+            idx += this.num_cells_at_level[i];
+        return idx + cell;
+    }
+
+    index2DFrom1D(idx) {
+        let level = 0;
+        let remaining = idx;
+        while (remaining >= this.num_cells_at_level[level]) {
+            remaining -= this.num_cells_at_level[level];
+            level++;
+        }
+        return [level, remaining];
+    }
+
+    parentIndex1D(level, cell) {
+        if (level === 0) return null;
+        if (level === 1) return 0;
+
+        if (this.num_cells_at_level[level - 1] <
+            this.num_cells_at_level[level])
+            return this.index1DFrom2D(level - 1, Math.floor(cell / 2));
+
+        return this.index1DFrom2D(level - 1, cell);
+    }
+
+    leftIndex1D(level, cell) {
+        if (level === 0) return 0; // center has no left/right
+        if (cell === 0)
+            return this.index1DFrom2D(level, this.num_cells_at_level[level] - 1);
+        return this.index1DFrom2D(level, cell - 1);
+    }
+
+    rightIndex1D(level, cell) {
+        if (level === 0) return 0;
+        if (cell === this.num_cells_at_level[level] - 1)
+            return this.index1DFrom2D(level, 0);
+        return this.index1DFrom2D(level, cell + 1);
+    }
+
+    getChildren(level, cell) {
+        if (level >= this.num_levels - 1) return [];
+        // Level 0 (center) can connect to ANY level-1 cell
+        if (level === 0) {
+            let result = [];
+            for (let i = 0; i < this.num_cells_at_level[1]; i++)
+                result.push(this.index1DFrom2D(1, i));
+            return result;
+        }
+        if (this.num_cells_at_level[level] < this.num_cells_at_level[level + 1]) {
+            return [
+                this.index1DFrom2D(level + 1, 2 * cell),
+                this.index1DFrom2D(level + 1, 2 * cell + 1)
+            ];
+        } else {
+            return [this.index1DFrom2D(level + 1, cell)];
+        }
+    }
+
+    createDFSTree() {
+        let graph = {};
+        for (let i = 0; i < this.total_cells; i++)
+            graph[i] = [];
+
+        // Start DFS from cell 0 (center) so the whole graph is connected
+        let visited = new Set([0]);
+        let stack = [0];
+        let current = 0;
+
+        while (visited.size < this.total_cells) {
+
+            let [level, cell] = this.index2DFrom1D(current);
+            let connections = [];
+
+            if (level === 0) {
+                // Center connects to all level-1 cells
+                for (let i = 0; i < this.num_cells_at_level[1]; i++)
+                    connections.push(this.index1DFrom2D(1, i));
+            } else {
+                connections.push(this.parentIndex1D(level, cell));
+                connections.push(this.leftIndex1D(level, cell));
+                connections.push(this.rightIndex1D(level, cell));
+
+                for (let c of this.getChildren(level, cell))
+                    connections.push(c);
+            }
+
+            let unvisited = connections.filter(n => n !== null && !visited.has(n));
+
+            if (unvisited.length > 0) {
+                let next = unvisited[Math.floor(Math.random() * unvisited.length)];
+
+                graph[current].push(next);
+                graph[next].push(current);
+
+                visited.add(next);
+                stack.push(next);
+                current = next;
+            } else {
+                if (stack.length === 0) break;
+                current = stack.pop();
+            }
+        }
+
+        return graph;
+    }
+
+    drawMaze(graph) {
+        let ctx = this.ctx;
+        ctx.strokeStyle = "#00d4ff";
+        ctx.lineWidth = 2;
+
+        for (let level = 1; level < this.num_levels; level++) {
+
+            let radius = level * this.line_length;
+            let arcAngle = (2 * Math.PI) / this.num_cells_at_level[level];
+
+            for (let cell = 0; cell < this.num_cells_at_level[level]; cell++) {
+
+                let cell1D = this.index1DFrom2D(level, cell);
+                let parent = this.parentIndex1D(level, cell);
+                let left = this.leftIndex1D(level, cell);
+                let angle = cell * arcAngle;
+
+                // Draw radial wall if not connected to left neighbour
+                if (!graph[cell1D].includes(left)) {
+                    this.drawLine(radius, angle);
+                }
+
+                // Draw arc wall if not connected to parent
+                if (!graph[cell1D].includes(parent)) {
+                    this.drawArc(radius, angle, arcAngle);
+                }
+            }
+        }
+
+        // Outer boundary with exit gap
+        let outerRadius = this.num_levels * this.line_length;
+        let numCells = this.num_cells_at_level[this.num_cells_at_level.length - 1];
+        let arcAngle = (2 * Math.PI) / numCells;
+
+        for (let cell = 0; cell < numCells; cell++) {
+            if (cell === this.exitCell) {
+                // Draw a green exit marker
+                let midAngle = cell * arcAngle + arcAngle / 2;
+                let ex = this.centerX + outerRadius * Math.cos(midAngle);
+                let ey = this.centerY + outerRadius * Math.sin(midAngle);
+                ctx.save();
+                ctx.strokeStyle = "#00ff88";
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(this.centerX, this.centerY, outerRadius, cell * arcAngle, (cell + 1) * arcAngle);
+                ctx.stroke();
+                ctx.restore();
+                continue;
+            }
+            this.drawArc(outerRadius, cell * arcAngle, arcAngle);
+        }
+    }
+
+    drawArc(radius, start, angle) {
+        this.ctx.beginPath();
+        this.ctx.arc(this.centerX, this.centerY, radius, start, start + angle);
+        this.ctx.stroke();
+    }
+
+    drawLine(radius, angle) {
+        let x1 = this.centerX + radius * Math.cos(angle);
+        let y1 = this.centerY + radius * Math.sin(angle);
+        let x2 = this.centerX + (radius + this.line_length) * Math.cos(angle);
+        let y2 = this.centerY + (radius + this.line_length) * Math.sin(angle);
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(x1, y1);
+        this.ctx.lineTo(x2, y2);
+        this.ctx.stroke();
+    }
+
+    drawPlayer() {
+        let [level, cell] = this.index2DFrom1D(this.playerIndex);
+
+        let radius = level * this.line_length + this.line_length / 2;
+        let arcAngle;
+
+        if (level === 0) {
+            arcAngle = 2 * Math.PI; // center
+        } else {
+            arcAngle = (2 * Math.PI) / this.num_cells_at_level[level];
+        }
+
+        let angle = (level === 0) ? 0 : cell * arcAngle + arcAngle / 2;
+
+        let x = (level === 0) ? this.centerX : this.centerX + radius * Math.cos(angle);
+        let y = (level === 0) ? this.centerY : this.centerY + radius * Math.sin(angle);
+
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, 7, 0, 2 * Math.PI);
+        this.ctx.fillStyle = "#ff4455";
+        this.ctx.fill();
+        this.ctx.strokeStyle = "#fff";
+        this.ctx.lineWidth = 1.5;
+        this.ctx.stroke();
+    }
+
+    movePlayer(direction, graph) {
+        if (this.won) return;
+
+        let [level, cell] = this.index2DFrom1D(this.playerIndex);
+        let target = null;
+
+        if (direction === "left" && level > 0)
+            target = this.leftIndex1D(level, cell);
+
+        if (direction === "right" && level > 0)
+            target = this.rightIndex1D(level, cell);
+
+        if (direction === "in" && level > 0)
+            target = this.parentIndex1D(level, cell);
+
+        if (direction === "out") {
+            if (level === this.num_levels - 1) {
+                // Check if on exit cell — player escapes!
+                if (cell === this.exitCell) {
+                    this.won = true;
+                    setTimeout(() => alert("🎉 You escaped the maze!"), 50);
+                }
+                return;
+            }
+
+            let children = this.getChildren(level, cell);
+            for (let c of children) {
+                if (graph[this.playerIndex].includes(c)) {
+                    target = c;
+                    break;
+                }
+            }
+        }
+
+        if (target !== null && graph[this.playerIndex].includes(target)) {
+            this.playerIndex = target;
+        }
+    }
+}
+
+const canvas = document.getElementById("mazeCanvas");
+const ctx = canvas.getContext("2d");
+
+const maze = new CircularMaze(6, 60, ctx, 400, 400);
+const tree = maze.createDFSTree();
+
+// Set exit once, before any drawing
+maze.exitCell = Math.floor(Math.random() * maze.num_cells_at_level[maze.num_levels - 1]);
+
+function drawEverything() {
+    ctx.clearRect(0, 0, 800, 800);
+
+    // Subtle background glow at center
+    let grad = ctx.createRadialGradient(400, 400, 0, 400, 400, 400);
+    grad.addColorStop(0, "#0d0d2b");
+    grad.addColorStop(1, "#0a0a15");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 800, 800);
+
+    maze.drawMaze(tree);
+    maze.drawPlayer();
+}
+
+drawEverything();
+
+document.addEventListener("keydown", (e) => {
+    const moves = {
+        "ArrowLeft":  "left",
+        "ArrowRight": "right",
+        "ArrowUp":    "out",
+        "ArrowDown":  "in"
+    };
+    if (moves[e.key]) {
+        e.preventDefault();
+        maze.movePlayer(moves[e.key], tree);
+        drawEverything();
+    }
+});
+</script>
 </body>
 </html>
