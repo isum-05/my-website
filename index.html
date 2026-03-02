@@ -1,42 +1,293 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Web Page</title>
-    <!-- Link to the external CSS file -->
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<title>Circular Maze with Sprite</title>
+<style>
+  body { margin:0; background:#111; display:flex; justify-content:center; align-items:center; height:100vh; }
+  canvas { background:#222; display:block; }
+</style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to My Simple Web Page</h1>
-    </header>
+<canvas id="mazeCanvas" width="800" height="800"></canvas>
 
-    <nav>
-        <ul>
-            <li><a href="#home">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#contact">Contact</a></li>
-        </ul>
-    </nav>
+<script>
+// ---------------- Maze Canvas ----------------
+const canvas = document.getElementById("mazeCanvas");
+const ctx = canvas.getContext("2d");
 
-    <section id="home">
-        <h2>Home Section</h2>
-        <p>This is a simple homepage section with some text. You can add more content here.</p>
-    </section>
+// ---------------- Sprite Sheet Setup ----------------
+const playerImage = new Image();
+playerImage.src = 'image/spriteSheet.png';
+const spriteWidth = 64;
+const spriteHeight = 64;
+let gameFrame = 0;
+const staggerFrames = 7;
 
-    <section id="about">
-        <h2>About Section</h2>
-        <p>This section contains information about the purpose of the page.</p>
-    </section>
+const spriteAnimations = [];
+const animationStates = [
+    { 
+        name:"back",
+        frames:8
+    },
 
-    <section id="contact">
-        <h2>Contact Section</h2>
-        <p>Feel free to contact me at <a href="mailto:your.email@example.com">your.email@example.com</a>.</p>
-    </section>
+    {
+        name:"back_left",
+        frames:6
+    },
+    {
+        name:"side_left",
+        frames:10
+    },
 
-    <footer>
-        <p>&copy; 2024 My Simple Web Page</p>
-    </footer>
+    {
+        name:"front_left",
+        frames:8
+    },
+
+    {
+        name:"front",
+        frames:10
+    },
+
+    {
+        name:"front_right",
+        frames:8
+    },
+
+    {
+        name:"side_right",
+        frames:12
+    },
+
+    {
+        name:"back_right",
+        frames:6
+    },
+
+    {
+        name:"jump",
+        frames:15
+    },
+
+    {
+        name:"roll",
+        frames:6
+    },
+];
+animationStates.forEach((state,index)=>{
+    let frames = { loc:[] };
+    for(let j=0;j<state.frames;j++){
+        frames.loc.push({x:j*spriteWidth, y:index*spriteHeight});
+    }
+    spriteAnimations[state.name] = frames;
+});
+
+// ---------------- Maze Class ----------------
+class CircularMaze {
+    constructor(n, r, ctx, cx, cy) {
+        this.num_levels = n;
+        this.line_length = r;
+        this.ctx = ctx;
+        this.centerX = cx;
+        this.centerY = cy;
+
+        this.num_cells_at_level = this.cellCountByLevel();
+        this.total_cells = this.num_cells_at_level.reduce((a,b)=>a+b,0);
+
+        this.playerIndex = 0;
+        this.exitCell = null;
+        this.won = false;
+        this.lastMove = "idle";
+        this.idleAnim = "roll";
+    }
+
+    cellCountByLevel() {
+        let cells = [1];
+        for(let level=1;level<this.num_levels;level++)
+            cells.push(Math.pow(2, Math.floor(Math.log2(level+1))+3));
+        return cells;
+    }
+
+    index1DFrom2D(level, cell) {
+        let idx=0; for(let i=0;i<level;i++) idx+=this.num_cells_at_level[i];
+        return idx+cell;
+    }
+
+    index2DFrom1D(idx) {
+        let level=0, rem=idx;
+        while(rem>=this.num_cells_at_level[level]) { rem-=this.num_cells_at_level[level]; level++; }
+        return [level, rem];
+    }
+
+    parentIndex1D(level, cell) {
+        if(level===0) return null;
+        if(level===1) return 0;
+        if(this.num_cells_at_level[level-1]<this.num_cells_at_level[level])
+            return this.index1DFrom2D(level-1, Math.floor(cell/2));
+        return this.index1DFrom2D(level-1, cell);
+    }
+
+    leftIndex1D(level, cell) {
+        if(level===0) return 0;
+        return (cell===0)? this.index1DFrom2D(level,this.num_cells_at_level[level]-1) : this.index1DFrom2D(level,cell-1);
+    }
+
+    rightIndex1D(level, cell) {
+        if(level===0) return 0;
+        return (cell===this.num_cells_at_level[level]-1)? this.index1DFrom2D(level,0) : this.index1DFrom2D(level,cell+1);
+    }
+
+    getChildren(level, cell) {
+        if(level>=this.num_levels-1) return [];
+        if(level===0){ let arr=[]; for(let i=0;i<this.num_cells_at_level[1];i++) arr.push(this.index1DFrom2D(1,i)); return arr; }
+        if(this.num_cells_at_level[level]<this.num_cells_at_level[level+1])
+            return [this.index1DFrom2D(level+1,2*cell), this.index1DFrom2D(level+1,2*cell+1)];
+        return [this.index1DFrom2D(level+1,cell)];
+    }
+
+    createDFSTree() {
+        let graph={}; for(let i=0;i<this.total_cells;i++) graph[i]=[];
+        let visited=new Set([0]), stack=[0], current=0;
+        while(visited.size<this.total_cells){
+            let [level,cell]=this.index2DFrom1D(current);
+            let con=[];
+            if(level===0){ for(let i=0;i<this.num_cells_at_level[1];i++) con.push(this.index1DFrom2D(1,i)); }
+            else { con.push(this.parentIndex1D(level,cell), this.leftIndex1D(level,cell), this.rightIndex1D(level,cell), ...this.getChildren(level,cell)); }
+            let unvisited=con.filter(n=>n!==null && !visited.has(n));
+            if(unvisited.length>0){
+                let next=unvisited[Math.floor(Math.random()*unvisited.length)];
+                graph[current].push(next); graph[next].push(current); visited.add(next); stack.push(next); current=next;
+            } else { current=stack.pop(); }
+        }
+        return graph;
+    }
+
+    drawLine(radius, angle) {
+        const thickness=5;
+        let x1=this.centerX+radius*Math.cos(angle);
+        let y1=this.centerY+radius*Math.sin(angle);
+        let x2=this.centerX+(radius+this.line_length)*Math.cos(angle);
+        let y2=this.centerY+(radius+this.line_length)*Math.sin(angle);
+        let ang=Math.atan2(y2-y1,x2-x1);
+        let length=Math.hypot(x2-x1,y2-y1);
+        this.ctx.save(); this.ctx.translate(x1,y1); this.ctx.rotate(ang);
+        this.ctx.fillStyle = "white"; // plain color
+        this.ctx.fillRect(0,-thickness/2,length,thickness);
+        this.ctx.restore();
+    }
+
+    drawArc(radius,start,angle){
+        const thickness=5;
+        this.ctx.save(); this.ctx.beginPath();
+        this.ctx.arc(this.centerX,this.centerY,radius,start,start+angle);
+        this.ctx.arc(this.centerX,this.centerY,radius+thickness,start+angle,start,true);
+        this.ctx.closePath(); this.ctx.fillStyle = "white"; // plain color
+        this.ctx.fill(); this.ctx.restore();
+    }
+
+    drawMaze(graph){
+        for(let level=1;level<this.num_levels;level++){
+            let radius=level*this.line_length;
+            let arcAngle=(2*Math.PI)/this.num_cells_at_level[level];
+            for(let cell=0;cell<this.num_cells_at_level[level];cell++){
+                let cell1D=this.index1DFrom2D(level,cell);
+                let parent=this.parentIndex1D(level,cell);
+                let left=this.leftIndex1D(level,cell);
+                let angle=cell*arcAngle;
+                if(!graph[cell1D].includes(left)) this.drawLine(radius,angle);
+                if(!graph[cell1D].includes(parent)) this.drawArc(radius,angle,arcAngle);
+            }
+        }
+        let outerRadius=this.num_levels*this.line_length;
+        let numCells=this.num_cells_at_level[this.num_levels-1];
+        let arcAngle=(2*Math.PI)/numCells;
+        for(let cell=0;cell<numCells;cell++){ if(cell===this.exitCell) continue; this.drawArc(outerRadius,cell*arcAngle,arcAngle);}
+    }
+
+    drawPlayer() {
+        const [level, cell] = this.index2DFrom1D(this.playerIndex);
+        const radius = level*this.line_length + this.line_length/2;
+        const arcAngle = (level===0?2*Math.PI:(2*Math.PI)/this.num_cells_at_level[level]);
+        const angle = (level===0?0:cell*arcAngle+arcAngle/2);
+        const x = this.centerX + radius*Math.cos(angle) - 15;
+        const y = this.centerY + radius*Math.sin(angle) - 15;
+
+        let animName;
+        if(this.lastMove==="left") animName="side_left";
+        else if(this.lastMove==="right") animName="side_right";
+        else if(this.lastMove==="in") animName="front";
+        else if(this.lastMove==="out") animName="back";
+        else animName = this.idleAnim;
+
+        let frames = spriteAnimations[animName].loc;
+        let position = Math.floor(gameFrame/staggerFrames)%frames.length;
+        let frameX = frames[position].x;
+        let frameY = frames[position].y;
+
+        ctx.drawImage(playerImage, frameX, frameY, spriteWidth, spriteHeight, x, y, 30, 30);
+        gameFrame++;
+
+        // idle animation loop
+        if(this.lastMove==="idle" && position===frames.length-1){
+            this.idleAnim = (this.idleAnim==="roll") ? "jump" : "roll";
+        }
+    }
+
+    movePlayer(direction, graph){
+        if(this.won) return;
+        let [level,cell]=this.index2DFrom1D(this.playerIndex);
+        let target=null;
+        if(direction==="left" && level>0) target=this.leftIndex1D(level,cell);
+        if(direction==="right" && level>0) target=this.rightIndex1D(level,cell);
+        if(direction==="in" && level>0) target=this.parentIndex1D(level,cell);
+        if(direction==="out"){
+            if(level===this.num_levels-1){
+                if(cell===this.exitCell){ this.won=true; alert("You escaped!"); }
+                return;
+            }
+            let children=this.getChildren(level,cell);
+            for(let c of children){ if(graph[this.playerIndex].includes(c)){ target=c; break; } }
+        }
+        if(target!==null && graph[this.playerIndex].includes(target)) {
+            this.playerIndex=target;
+            this.lastMove = direction;
+        } else {
+            this.lastMove = "idle";
+        }
+    }
+}
+
+// ---------------- Initialize Maze ----------------
+const maze = new CircularMaze(3, 100, ctx, 400, 400);
+const tree = maze.createDFSTree();
+maze.exitCell = Math.floor(Math.random()*maze.num_cells_at_level[maze.num_levels-1]);
+
+// Pre-render maze
+const offscreenCanvas = document.createElement("canvas");
+offscreenCanvas.width=800; offscreenCanvas.height=800;
+const offCtx = offscreenCanvas.getContext("2d");
+maze.ctx = offCtx;
+maze.drawMaze(tree); // draw maze once
+
+// ---------------- Animation Loop ----------------
+function animate(){
+    ctx.clearRect(0,0,800,800);
+    ctx.drawImage(offscreenCanvas,0,0);
+    maze.drawPlayer();
+    requestAnimationFrame(animate);
+}
+
+// ---------------- Key Events ----------------
+document.addEventListener("keydown",(e)=>{
+    const moves = { ArrowLeft:"left", ArrowRight:"right", ArrowUp:"out", ArrowDown:"in" };
+    if(moves[e.key]){
+        e.preventDefault();
+        maze.movePlayer(moves[e.key], tree);
+    }
+});
+
+playerImage.onload = animate;
+</script>
 </body>
 </html>
