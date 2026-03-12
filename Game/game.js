@@ -3,8 +3,8 @@ let last_entrance, last_exit;
 
 let obstacle = [];
 
-const width = 11;
-const height = 11;
+const width = 21;
+const height = 21;
 
 
 const tile_size = 32;
@@ -53,7 +53,7 @@ function create_maze(){
         new Promise(res => openImage.onload = res)
     ]).then(() => {
         draw_maze();
-        place_obstacle(2);
+        place_obstacle(3);
     });
 }
 function dig_around(x,y){

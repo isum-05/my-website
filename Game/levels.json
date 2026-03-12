@@ -9,6 +9,5 @@
         {"level_4":{"height": 17,"width": 17,"coins": 25,"obstacles": 5,"timeout": 150}},
 
         {"level_5":{"height": 19,"width": 19,"coins": 30,"obstacles": 6,"timeout": 180}}
-
     ]
 }

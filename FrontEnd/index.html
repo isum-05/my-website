@@ -1,0 +1,97 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonkeyQuest</title>
+    <link rel="shortcut icon" href="img/Favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="style_1.css">
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <div class="logo-image">
+                <img src="img/logo2.png" alt="MonkeyQuest Logo">
+            </div>
+            <div class="popup-section"></div>
+        </div>
+        <div class="right-section">
+            <div class="Monkey-message-section">
+                <div class="text-box" id="monkeyText">
+
+                </div>
+            </div>
+            <div class="play-dashboard">
+                <button class="play" onclick="isLogged()"><img src="img/playImg.png" alt="play"></button>
+            </div>
+        </div>
+    </div>
+    <div class="login" id="loginBox">
+        <button class="close-btn" onclick="closeLogin()">✖</button>
+        <div class="login-right">
+            <div> 
+                <input type="text" id="name" placeholder="Name">
+                <div class="authenticate-section">
+                    <p>Continue with</p>
+                    <button class="link-btn">GitHub</button>
+                    <button  class="link-btn">Google</button>
+                </div>
+            </div>        
+            <button id="login-btn" class="Btn"> <span class="button_top"> Login </span></button>
+        </div>
+        <div class="image-cute">
+            <img src="img/login_cute_img.png" alt="image-cute" srcset="" id="login-image-cute">
+        </div>
+    </div>   
+</body>
+<script>
+const textBox = document.getElementById("monkeyText");
+textBox.innerHTML = "Thinking...";
+function monkeySpeak() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "https://icanhazdadjoke.com/", true);
+        xhr.setRequestHeader("Accept", "application/json");
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    const data = JSON.parse(xhr.responseText);
+                    textBox.style.opacity = 0;
+                    textBox.style.transform = "scale(0.95)";
+                    setTimeout(() => {
+                        textBox.innerText = data.joke;
+                        textBox.style.transform = "scale(1)";
+                        textBox.style.opacity = 1;
+                    }, 300);
+                } else {
+                    textBox.innerText = "Oops!";
+                }
+            }
+        };
+
+    xhr.send();
+}
+monkeySpeak();
+setInterval(monkeySpeak, 5000);
+
+
+
+function isLogged(){
+    const user = localStorage.getItem("user");
+    const session = sessionStorage.getItem("ActiveSession");
+
+    if(user && session){
+
+
+      return true;
+    }else{
+        document.querySelector(".login").style.display= "grid";
+        
+        return false;
+    }
+}
+function closeLogin(){
+    document.getElementById("loginBox").style.display = "none";
+}
+
+</script>
+</html>

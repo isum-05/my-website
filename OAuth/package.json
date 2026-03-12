@@ -1,0 +1,25 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "monkey_quest_backend",
+  "homepage": "https://github.com/isum-05/MonkeyQuest-Maze-Game#readme",
+  "bugs": {
+    "url": "https://github.com/isum-05/MonkeyQuest-Maze-Game/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isum-05/MonkeyQuest-Maze-Game.git"
+  },
+  "license": "ISC",
+  "author": "Isum",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "axios": "^1.13.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1"
+  }
+}

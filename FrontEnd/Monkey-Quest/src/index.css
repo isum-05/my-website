@@ -1,0 +1,128 @@
+body{
+  margin: 0;
+}
+
+#root{
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+.container{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    width:1280px;
+    height: 100%;
+    margin:auto; 
+
+    background-image:url("src/assets/BG_2.png");
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+}
+
+.left-section{
+    display: flex;
+    flex-direction: column;
+    align-self: start;
+}
+.logo-image {
+    margin: 3em 3em;
+}
+.logo-image img{
+    right: 0;
+    width: 100%;
+    max-width: 600px;
+}
+
+.right-section{
+    display: grid;
+    grid-template-rows: 2fr 1fr;
+}
+.play-dashboard{
+    width:100%;
+}
+
+.play{
+    position: relative;
+    top: 45%;
+    left:30%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.play img{
+    width: 60%;
+    height: auto;
+    transition: transform 0.2s ease;
+}
+
+
+.play:hover img{
+    transform: scale(1.1);
+}
+
+
+.play:active img{
+    transform: scale(0.95);
+}
+
+.Monkey-message-section{
+    display:flex;
+    justify-content:center;
+    position: relative;
+}
+
+/* speech bubble */
+.text-box{
+    left: 25%;
+    bottom:20%;
+    position: absolute;
+    max-width: 420px;
+
+    margin: 1em 3em;
+    padding: 1em 1.5em;
+
+    background: #ffffff;
+    border-radius: 15px;
+    border: 3px solid #333;
+
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.4;
+
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+}
+
+/* speech bubble tail */
+.text-box::after{
+    content: "";
+    position: absolute;
+    bottom: -18px;
+    left: 40px;
+
+    width: 0;
+    height: 0;
+
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 18px solid #ffffff;
+}
+
+/* little border for tail */
+.text-box::before{
+    content: "";
+    position: absolute;
+    bottom: -22px;
+    left: 38px;
+
+    width: 0;
+    height: 0;
+
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 22px solid #333;
+}
