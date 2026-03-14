@@ -68,14 +68,19 @@
 <script src="/BackEnd/player.js"></script>
 <script src="/BackEnd/User.js"></script>
 <script>
-    let user = User.load();
+document.addEventListener("DOMContentLoaded", () => {
 
-    if(!user){
-        window.location.href = "index.html";
-    }else{
+        let user = User.load();
+
+        if(!user){
+            window.location.href = "index.html";
+            return;
+        }
+
         user.playerInit_level();
         user.gameLoop();
-    }
+        updateDashBoardDisplay();
+    });
 
 
     document.addEventListener("keydown", function(e){

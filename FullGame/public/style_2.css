@@ -1,0 +1,348 @@
+@import url('https://fonts.googleapis.com/css2?family=Afacad+Flux:wght@100..1000&family=Arizonia&family=Bad+Script&family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Bellefair&family=Benne&family=Edu+AU+VIC+WA+NT+Pre:wght@400..700&family=Faculty+Glyphic&family=Geist:wght@100..900&family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Iosevka+Charon+Mono:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&family=Itim&family=Josefin+Sans:ital,wght@0,100..700;1,100..700&family=Lancelot&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Pixelify+Sans:wght@400..700&family=Playwrite+GB+S:ital,wght@0,100..400;1,100..400&family=Poiret+One&family=Raleway:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body{
+    font-family: "Iosevka Charon Mono", monospace;
+    font-weight: 300;
+    font-style: normal;
+    color: white;
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+.container{
+    display:flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width:1280px;
+    height: 100%;
+    margin:auto; 
+
+    padding: 5em 3em;
+
+    background-image:url("img/BG_3.png");
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+}
+
+.maze-container{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3em;
+
+}
+
+.score-card{
+    background-color: whitesmoke;
+    border-radius: 1em;
+    padding: 1em 1em;
+    width: 100%;
+}
+.chat-box-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: #071e07;
+    padding: 1em 1em;
+    border-radius: 1em;
+}
+
+
+.maze-card {
+    width: 100%;
+    display: flex;
+    min-width: 352px; /* optional: at least half of max size */
+    min-height: 352px;
+}
+#maze {
+    width: 100%;
+    height: auto;
+    max-width: 604px; /* optional: match tile_size*width, e.g., 32*22 */
+    max-height: 604px; /* optional: match tile_size*height */
+    border: 2px solid black; /* for debugging */
+}
+
+.chat{
+    padding: 1em 1em;
+    border: 2px solid white;
+    border-radius: 1em;
+    height: 78%;
+}
+
+.message {
+    display: flex;
+    gap: 0.5em;
+    margin: 0;
+}
+
+
+.message button {
+    padding: 0.5em 1em;
+    border-radius: 0.5em;
+    border: none;
+    cursor: pointer;
+}
+
+
+.text-in{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    background-color: white;
+    justify-content: space-between;
+    border-radius: 1em;
+}
+
+.text-in input{
+    font-size: 1em;
+    color: #071e07;
+    border: none;
+    width: 100%;
+    border-radius: 1em;
+}
+
+.text-in img{
+    width: 20%;
+}
+
+#send-btn {
+    display: flex;                
+    align-items: center;          
+    justify-content: center;      
+    padding: 0.4em;              
+    border: none;                 
+    border-radius: 0.5em;         
+    background-color: #4CAF50;    
+    cursor: pointer;              
+    transition: background-color 0.3s ease; 
+}
+
+#send-btn:hover {
+    background-color: #3e8e41;    
+}
+
+#send-btn img {
+    width: 24px;                 
+    height: 24px;
+    display: block;               
+}
+
+.message-from-monkey{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+}
+.message-from-monkey img{
+    width: 20%;
+    border-radius: 50%;
+}
+
+.chat-monkey{
+    margin:0.5em 0;
+    margin-left: 3em;
+    background-color: white;
+    padding: 0.5em 0.5em;
+    border-radius: 1em;
+    max-width: max-content;
+}
+.chat-monkey img{
+    width: 100%;
+}
+/* HTML: <div class="loader"></div> */
+.loader {
+  width: 30px;
+  aspect-ratio: 2;
+  --_g: no-repeat radial-gradient(circle closest-side,#000 90%,#0000);
+  background: 
+    var(--_g) 0%   50%,
+    var(--_g) 50%  50%,
+    var(--_g) 100% 50%;
+  background-size: calc(100%/3) 50%;
+  animation: l3 1s infinite linear;
+}
+@keyframes l3 {
+    20%{background-position:0%   0%, 50%  50%,100%  50%}
+    40%{background-position:0% 100%, 50%   0%,100%  50%}
+    60%{background-position:0%  50%, 50% 100%,100%   0%}
+    80%{background-position:0%  50%, 50%  50%,100% 100%}
+}
+
+.score-card{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #071e07;
+}
+
+.keypads{
+    display: grid;
+    gap:10px;
+    width: max-content;
+}
+.keypads div{
+    text-align: center;
+}
+
+.keypads button{
+    width:50px;
+    height:50px;
+    font-size:20px;
+    border:1px solid white;
+    background-color: transparent;
+    color: white;
+    border-radius:12px;
+    cursor:pointer;
+    transition:all 0.1s ease;
+}
+
+
+.keypads button.active{
+    transform: scale(0.85);
+    background:#ffffff;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+}
+.logout-section{
+    width: 125px;
+}
+/* From Uiverse.io by MUJTABA201566 */ 
+.Btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 45px;
+  height: 45px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition-duration: 0.3s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.199);
+  background-color: white;
+}
+
+/* plus sign */
+.sign {
+  width: 100%;
+  transition-duration: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sign svg {
+  width: 17px;
+}
+
+.sign svg path {
+  fill: black;
+}
+/* text */
+.text {
+  position: absolute;
+  right: 0%;
+  width: 0%;
+  opacity: 0;
+  color: black;
+  font-size: 1.2em;
+  font-weight: 600;
+  transition-duration: 0.3s;
+}
+/* hover effect on button width */
+.Btn:hover {
+  background-color: white;
+  width: 125px;
+  border-radius: 40px;
+  transition-duration: 0.3s;
+}
+
+.Btn:hover .sign {
+  width: 30%;
+  transition-duration: 0.3s;
+  padding-left: 20px;
+}
+
+.Btn:hover .sign svg path {
+  fill: black;
+}
+
+/* hover effect button's text */
+.Btn:hover .text {
+  opacity: 1;
+  width: 70%;
+  transition-duration: 0.3s;
+  padding-right: 10px;
+}
+/* button click effect*/
+.Btn:active {
+  transform: translate(2px, 2px);
+}
+
+.LevelUP_overlay {
+    display: none;
+    position: fixed;          /* Overlay stays on top */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);  /* Semi-transparent dark background */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;            /* Above all other elements */
+    text-align: center;
+    gap: 1em;
+    padding: 1em;
+    box-sizing: border-box;
+}
+
+.LevelUP_overlay .profile-mon {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;        /* Circle image */
+    border: 3px solid #fff;
+    object-fit: cover;
+}
+
+.LevelUP_overlay h1 {
+    font-size: 3em;
+    color: #FFD700;            /* Gold color for "Level Up" */
+    margin: 0;
+}
+
+.LevelUP_overlay h2 {
+    font-size: 1.5em;
+    color: #fff;
+    margin: 0;
+}
+
+.LevelUP_overlay button {
+    padding: 0.75em 2em;
+    font-size: 1.2em;
+    background-color: #6e8649;
+    color: #fff;
+    border: none;
+    border-radius: 0.5em;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.LevelUP_overlay button:hover {
+    background-color: #556b38;
+}
+
+#question{
+    color: #2c2304;
+}

@@ -4,14 +4,15 @@ require('dotenv').config();
 
 
 const app = express();
-const PORT = wait;
+const PORT = 4001;
 
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/auth/github',(req,res)=>{
-    const redirect_uri = '';// add your redirect uri here
+    const redirect_uri = 'http://localhost:4001/auth/github/callback';// add your redirect uri here
     const client_id = process.env.GITHUB_CLIENT_ID;
 
-    const url = ``; // add your github auth url here
+    const url = `https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=user:email`; // add your github auth url here
 
     res.redirect(url);
 });
@@ -43,7 +44,7 @@ const email = emailRes.data.find(email => email.primary && email.verified)?.emai
 console.log('GitHub User:', userRes.data);
 console.log('GitHub Email:', email);
 //check
-res.redirect('/success');
+res.redirect(`http://localhost:5500/game.html?name=${userRes.data.login}&email=${email}`);
 });
 
 app.listen(PORT,()=>{
