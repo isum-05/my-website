@@ -1,5 +1,0 @@
-username = isumh2005_db_user 
-password = cbsiUlsXNRoNa9wy
-
-
-string = mongodb+srv://isumh2005_db_user:cbsiUlsXNRoNa9wy@cluster0.r6fwb4r.mongodb.net/
