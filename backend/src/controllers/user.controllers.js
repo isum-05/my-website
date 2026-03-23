@@ -1,6 +1,7 @@
 import {User} from "../models/user.model.js";
 import axios from "axios";
 
+
 const githubAccess = async(req,res) =>{
     try {
         const redirect_uri = process.env.GITHUB_REDIRECT_URI;
@@ -55,33 +56,26 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: "Missing required fields" });
         }
 
-        const existing = await User.findOne({
+        let user = await User.findOne({
             $or: [
                 { email: email.toLowerCase() },
                 { githubId: id }
             ]
         });
 
-        if (existing) {
-            return res.status(400).json({ message: "User already exists" });
+        if (!user) {
+            user = await User.create({
+                username: login,
+                email: email.toLowerCase(),
+                githubId: id,
+                coins: 0,
+                level: 0
+            });
         }
 
-        const user = await User.create({
-            username: login,
-            email: email.toLowerCase(),
-            githubId: id,
-            coins: 0,
-            level: 0
-        });
+        req.session.userId = user._id;
 
-        res.status(201).json({
-            message: "User registered",
-            user: {
-                id: user._id,
-                email: user.email,
-                username: user.username
-            }
-        });
+        res.redirect("http://localhost:5173/game.html");
 
     } catch (error) {
         res.status(500).json({
@@ -91,7 +85,45 @@ const registerUser = async (req, res) => {
     }
 };  
 
+const getCurrentUser = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.status(401).json({ message: "Not logged in" });
+        }
+        const user = await User.findById(req.session.userId);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json({
+            username: user.username,
+            level: user.level,
+            coins: user.coins
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+};
+const logoutUser = (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({
+                message: "Logout failed",
+                error: err.message
+            });
+        }
+
+        res.clearCookie("connect.sid"); 
+        res.json({ message: "Logged out" });
+    });
+};
 export{
     registerUser,
-    githubAccess
+    githubAccess,
+    getCurrentUser,
+    logoutUser
 };

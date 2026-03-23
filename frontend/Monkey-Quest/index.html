@@ -1,70 +1,127 @@
-<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="./src/style.css">
-    <title>monkey-quest</title>
-  </head>
-  <body>
-       <div class="container">
-        <div class="maze-container">
-            <div class="maze-card">
-                <canvas id="maze"></canvas>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonkeyQuest</title>
+    <link rel="shortcut icon" href="img/Favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="./src/style_1.css">
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <div class="logo-image">
+                <img src="/img/logo2.png" alt="MonkeyQuest Logo">
             </div>
-            <div class="chat-box-container">
-                <div class="chat">
-                     <div class="message-from-monkey">
-                        <img src="img/monkeychat.png" alt="" id="levelImg">
-                        <p class="level-display">level 1</p>
-                     </div>
-                     <div class="chat-monkey" id="question">
-                        <div class="loader"></div>
-                     </div>
+            <div class="popup-section"></div>
+        </div>
+        <div class="right-section">
+            <div class="Monkey-message-section">
+                <div class="text-box" id="monkeyText">
                 </div>
-                
-                <form action="" method="post" class="message" id="banana_question_form">
-                    <div class="text-in"><input type="text" name="msg" id="msg"><img src="img/cute.png" alt="" srcset="" id="profile-image"></div>
-                    <button id="send-btn"><img src="img/send_50dp_071E07_FILL0_wght400_GRAD0_opsz48.svg" alt="" srcset=""></button>
-                </form>
-
+            </div>
+            <div class="play-dashboard">
+                <button class="play" id="start-btn"><img src="/img/playImg.png" alt="play"></button>
             </div>
         </div>
-        <div class="score-card">
-            <div id="level-display">LVL1</div>
+        <div class="login" id="loginBox">
+            <button class="close-btn" id="close-login">✖</button>
 
-            <div id="score-display">Score:100<div class="adding"></div></div>
-
-            <div id="profile"></div>
-
-            <div id="unloack">Goal:</div>
-            <div class="keypads">
-                <div>
-                    <button id="up">↑</button>
-                </div>
-                <div>
-                <button id="left">←</button>
-                <button id="down">↓</button>
-                <button id="right">→</button>
-                </div>
+            <div class="image-cute">
+                <img src="/login-img.png" alt="image-cute" srcset="" id="login-image-cute">
             </div>
-
-            <div class="logout-section"> 
-            <button class="Btn">
-                <div class="sign">
-                    <svg viewBox="0 0 512 512">
-                    <path
-                        d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z"
-                    ></path>
-                    </svg>
-                </div>
-                <div class="text">Logout</div>
-            </button>
+            <h1>Welcome to MonkeyQuest</h1>
+            <p>Sign in with GitHub for full features
+            or continue as a local player</p>
+            <div class="login-bottom">
+                <div> 
+                    <input type="text" id="name" placeholder="Name">
+                    <div class="authenticate-section">
+                        <p>Continue with</p>
+                        <button class="link-btn" id="github-btn" >GitHub</button>
+                    </div>
+                </div>        
+                <button id="login-btn" > Login</button>
             </div>
-
-        </div>
+        </div>  
     </div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+ 
+</body>
+<script>
+const textBox = document.getElementById("monkeyText");
+textBox.innerHTML = "Thinking...";
+async function monkeySpeak() {
+    try {
+        const res = await fetch("https://icanhazdadjoke.com/", {
+            headers: { Accept: "application/json" }
+        });
+        const data = await res.json();
+
+        textBox.style.opacity = 0;
+        textBox.style.transform = "scale(0.95)";
+
+        setTimeout(() => {
+            textBox.innerText = data.joke;
+            textBox.style.transform = "scale(1)";
+            textBox.style.opacity = 1;
+        }, 300);
+    } catch {
+        textBox.innerText = "Oops!";
+    }
+}
+
+monkeySpeak();
+setInterval(monkeySpeak, 5000);
+
+const loginBox = document.getElementById("loginBox");
+const loginBtn = document.getElementById("login-btn");
+const closeLoginBtn = document.getElementById("close-login");
+const startBtn = document.getElementById("start-btn");
+const githubBtn = document.getElementById("github-btn");
+
+function isLogged() {
+    const user = localStorage.getItem("User");
+    const session = sessionStorage.getItem("ActiveSession");
+
+    if (user && session) {
+        window.location.href = "game.html";
+        return true;
+    } else {
+        loginBox.style.display = "flex";
+        return false;
+    }
+}
+
+function closeLogin() {
+    loginBox.style.display = "none";
+}
+
+loginBtn.addEventListener("click", () => {
+    const nameInput = document.getElementById("name").value.trim();
+
+    if (nameInput === "") {
+        alert("Please enter your name to continue!");
+        return;
+    }
+
+    localStorage.setItem("User", JSON.stringify({
+            name: nameInput,
+            level: this.level,
+            coins: this.coins
+    }));
+    sessionStorage.setItem("ActiveSession", "true");
+    console.log("Local user saved to localStorage");
+
+    window.location.href = "game.html";
+});
+
+closeLoginBtn.addEventListener("click", closeLogin);
+
+startBtn.addEventListener("click", () => {
+    isLogged();
+});
+
+githubBtn.addEventListener("click", () => {
+    window.location.href = "http://localhost:4000/app/v1/users/auth/github";
+});
+</script>
 </html>

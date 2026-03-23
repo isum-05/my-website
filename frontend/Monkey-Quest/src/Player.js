@@ -24,8 +24,6 @@ class Player {
 
         this.animations = {};
         this.loadAnimations();
-
-        document.addEventListener("keydown", this.handleKey.bind(this));
     }
 
     loadAnimations(){
@@ -87,7 +85,7 @@ class Player {
         );
     }
 
-     handleKey(event){
+    handleKey(event){
 
         let newX = this.x;
         let newY = this.y;
@@ -115,21 +113,28 @@ class Player {
             return;
         }
 
-        this.tryMove(newX,newY);
+        return this.tryMove(newX,newY);
     }
 
-    tryMove(newX,newY){
-        const maze = this.game.mazeObj;
+tryMove(newX, newY){
+    const maze = this.game.mazeObj;
 
-        if(newX<0 || newY<0 || newX>=maze.width || newY>=maze.height) return;
-        if(maze.isWall(newX,newY)) return;
+    if(newX<0 || newY<0 || newX>=maze.width || newY>=maze.height) return null;
+    if(maze.isWall(newX,newY)) return null;
 
-        this.x = newX;
-        this.y = newY;
+    let obstacleAhead = this.game.obstacle.getObstacleAt(newX,newY);
+    if(obstacleAhead){
+        return {isOb: true, locX: newX, locY: newY};
+    }
 
-        if(this.x === maze.exit.x && this.y === maze.exit.y){
-            this.game.handleWin();
-        }
+    this.x = newX;
+    this.y = newY;
+
+    if(this.x === maze.exit.x && this.y === maze.exit.y){
+        this.game.handleWin();
+    }
+
+    return {isOb: false};
     }
 }
 

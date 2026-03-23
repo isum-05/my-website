@@ -73,7 +73,7 @@ class Obstacle{
     return this.path.reverse();
     }
     
-    loadQuestionAnimations(){
+    loadObstacleAnimations(){
 
         const states = [
             {name:"banana_question",frames:8}
