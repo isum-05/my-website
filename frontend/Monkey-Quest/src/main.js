@@ -47,6 +47,7 @@ async function initUser() {
         console.log("GitHub user detected");
 
         return new User(
+            backendUser.id,
             backendUser.username,
             backendUser.level,
             backendUser.coins
@@ -60,6 +61,7 @@ async function initUser() {
         console.log("Local user detected");
 
         return new User(
+            1,
             localUser.name,
             localUser.level,
             localUser.coins
@@ -92,7 +94,7 @@ async function initUser() {
 async function logout() {
     try {
       
-        await fetch("http://localhost:4000/logout", {
+        await fetch("http://localhost:4000/app/v1/users/logout", {
             method: "GET",
             credentials: "include"
         });
@@ -155,7 +157,12 @@ document.getElementById("banana_question_form").addEventListener("submit", (e)=>
             level: user.level,
             complete: true
         });
-        user.save();
+        if(user.id !== 1){
+            user.saveToDB();
+        }else{
+            user.save();
+        }
+        
         user.updateDashBoardDisplay();
     }
 });

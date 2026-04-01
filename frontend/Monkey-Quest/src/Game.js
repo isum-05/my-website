@@ -53,7 +53,7 @@ class Game {
                 overlay.remove(); 
             });
         }else{
-            alert("You reached the exit!");
+            document.getElementById("question").innerHTML = "Keep playing!";
         }
    
         this.user.player_init_level();

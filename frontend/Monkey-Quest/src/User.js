@@ -1,6 +1,7 @@
 import Game from "./Game";
 class User{
-    constructor(name,level=0,coins=0){
+    constructor(id,name,level=0,coins=0){
+        this.id = id;
         this.name = name;
         this.level = level;
         this.coins = coins;
@@ -46,7 +47,11 @@ class User{
         if (newLevel !== this.level) {
             this.level = newLevel;
             this.updateDashBoardDisplay();
-            this.save();
+            if(this.id !== 1) {
+                this.saveToDB();
+            }else{
+                this.save();
+            }
             return true;
         }
 
@@ -114,6 +119,27 @@ class User{
         
         document.getElementById("unlock").textContent = `Goal: ${this.levelsBoard[this.level].goal}`;
         
+    }
+
+
+    saveToDB(){
+        fetch("http://localhost:4000/app/v1/users/save", {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                user_id: this.id,
+                coins: this.coins,
+                level: this.level
+            })
+        }).then(res => res.json())
+        .then(data => {
+            console.log("Game state saved to DB:", data);
+        })
+        .catch(err => {
+            console.error("Failed to save game state:", err);
+        });
     }
 
 }

@@ -96,6 +96,7 @@ const getCurrentUser = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
         res.json({
+            id: user._id,
             username: user.username,
             level: user.level,
             coins: user.coins
@@ -121,6 +122,7 @@ const logoutUser = (req, res) => {
         res.json({ message: "Logged out" });
     });
 };
+
 export{
     registerUser,
     githubAccess,
