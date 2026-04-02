@@ -1,6 +1,6 @@
-#  Maze Quest
+#  Monkey Quest
 
-Maze Quest is a dynamic puzzle game where players navigate through increasingly complex mazes, overcome obstacles, and reach the goal to progress through levels.
+Monkey Quest is a dynamic puzzle game where players navigate through increasingly complex mazes, overcome obstacles, and reach the goal to progress through levels.
 
 ## Features
 - Dynamic maze generation using DFS algorithem
